@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assistente do Dia</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0e0f11;
+    --surface: #17191d;
+    --surface2: #1e2127;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0ede8;
+    --muted: #7a7d85;
+    --accent: #c8a87a;
+    --accent2: #e8d5b0;
+    --urgent: #e05a5a;
+    --unread: #5a9de0;
+    --calendar: #5abf8f;
+    --weather: #9b7fe0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 28px 0;
+  }
+
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+
+  .date-tag {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .hero {
+    padding: 32px 28px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .greeting {
+    font-family: 'DM Serif Display', serif;
+    font-size: 36px;
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .greeting em {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .status-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .status-pill {
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 0.5px solid;
+    letter-spacing: 0.04em;
+  }
+
+  .pill-urgent { color: var(--urgent); border-color: var(--urgent); background: rgba(224,90,90,0.08); }
+  .pill-unread { color: var(--unread); border-color: var(--unread); background: rgba(90,157,224,0.08); }
+  .pill-events { color: var(--calendar); border-color: var(--calendar); background: rgba(90,191,143,0.08); }
+
+  .sections {
+    padding: 0 28px 100px;
+  }
+
+  .section {
+    margin-top: 28px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .section-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-urgent { background: var(--urgent); }
+  .dot-unread { background: var(--unread); }
+  .dot-events { background: var(--calendar); }
+  .dot-weather { background: var(--weather); }
+  .dot-tomorrow { background: var(--accent); }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    position: relative;
+    transition: border-color 0.15s;
+  }
+
+  .card:hover { border-color: var(--border2); }
+
+  .card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .card-left { flex: 1; min-width: 0; }
+
+  .card-sender {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-subject {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-preview {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-time {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .urgent-badge {
+    font-size: 10px;
+    background: rgba(224,90,90,0.15);
+    color: var(--urgent);
+    border: 0.5px solid rgba(224,90,90,0.3);
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-left: 8px;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+  }
+
+  .event-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+
+  .event-time-block {
+    text-align: center;
+    min-width: 44px;
+    flex-shrink: 0;
+  }
+
+  .event-hour {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--calendar);
+    line-height: 1;
+  }
+
+  .event-ampm {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .event-divider {
+    width: 1px;
+    height: 36px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  .event-info { flex: 1; min-width: 0; }
+
+  .event-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .event-detail {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .weather-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .weather-icon {
+    font-size: 36px;
+    line-height: 1;
+  }
+
+  .weather-temp {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .weather-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .weather-extras {
+    margin-left: auto;
+    text-align: right;
+  }
+
+  .weather-row {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .weather-row span { color: var(--text); }
+
+  .loading-state {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state {
+    padding: 16px 0;
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  .reply-btn {
+    margin-top: 10px;
+    background: transparent;
+    border: 0.5px solid var(--border2);
+    border-radius: 8px;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.03em;
+  }
+
+  .reply-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  .input-zone {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, var(--bg) 60%, transparent);
+    padding: 20px 28px 28px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: var(--surface2);
+    border: 0.5px solid var(--border2);
+    border-radius: 28px;
+    padding: 10px 16px;
+  }
+
+  .input-field {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    placeholder-color: var(--muted);
+  }
+
+  .input-field::placeholder { color: var(--muted); }
+
+  .mic-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+
+  .mic-btn:hover { background: var(--accent2); }
+
+  .send-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    color: var(--muted);
+  }
+
+  .send-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  .reply-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .reply-modal.open { display: flex; }
+
+  .reply-sheet {
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    border-radius: 20px 20px 0 0;
+    padding: 24px;
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .reply-to {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .reply-to strong { color: var(--accent); }
+
+  .reply-textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 0.5px solid var(--border2);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    padding: 12px;
+    line-height: 1.6;
+    resize: none;
+    min-height: 120px;
+    outline: none;
+    margin-bottom: 12px;
+  }
+
+  .reply-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  .btn-cancel {
+    background: transparent;
+    border: 0.5px solid var(--border2);
+    border-radius: 8px;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+
+  .btn-draft {
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #0e0f11;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 18px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .btn-draft:hover { background: var(--accent2); }
+
+  .generating {
+    font-size: 12px;
+    color: var(--accent);
+    font-style: italic;
+    margin-top: 6px;
+    display: none;
+  }
+
+  .event-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .event-modal.open { display: flex; }
+
+  .event-sheet {
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    border-radius: 20px 20px 0 0;
+    padding: 24px;
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .event-form-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .form-field {
+    margin-bottom: 14px;
+  }
+
+  .form-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .form-input {
+    width: 100%;
+    background: var(--bg);
+    border: 0.5px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+  }
+
+  .form-row { display: flex; gap: 10px; }
+  .form-row .form-field { flex: 1; }
+
+  .notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--surface2);
+    border: 0.5px solid var(--border2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text);
+    z-index: 200;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: all 0.25s;
+    pointer-events: none;
+  }
+
+  .notification.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .action-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .action-chip {
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    border: 0.5px solid var(--border2);
+    background: var(--surface2);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.03em;
+  }
+
+  .action-chip:hover { color: var(--text); border-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <span class="logo">assistente</span>
+  <span class="date-tag" id="date-display"></span>
+</div>
+
+<div class="hero">
+  <div class="greeting">Bom dia,<br><em>vamos começar?</em></div>
+  <div class="status-row" id="status-row">
+    <span class="status-pill" style="color:var(--muted);border-color:var(--border)">carregando...</span>
+  </div>
+</div>
+
+<div class="sections" id="sections">
+  <div class="loading-state">
+    <div class="spinner"></div>
+    Buscando seus dados...
+  </div>
+</div>
+
+<div class="input-zone">
+  <div class="input-row">
+    <input class="input-field" id="user-input" placeholder="Criar evento, responder email, ou perguntar algo..." />
+    <button class="mic-btn" id="mic-btn" title="Falar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0e0f11" stroke-width="2.5" stroke-linecap="round">
+        <rect x="9" y="2" width="6" height="12" rx="3"/>
+        <path d="M5 10a7 7 0 0014 0"/>
+        <line x1="12" y1="21" x2="12" y2="17"/>
+        <line x1="8" y1="21" x2="16" y2="21"/>
+      </svg>
+    </button>
+    <button class="send-btn" id="send-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="5" y1="12" x2="19" y2="12"/>
+        <polyline points="12 5 19 12 12 19"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<!-- Reply Modal -->
+<div class="reply-modal" id="reply-modal">
+  <div class="reply-sheet">
+    <div class="reply-to">Respondendo para: <strong id="reply-to-name"></strong></div>
+    <textarea class="reply-textarea" id="reply-textarea" placeholder="Digite sua resposta..."></textarea>
+    <div class="generating" id="generating-text">Gerando rascunho com IA...</div>
+    <div class="reply-actions">
+      <button class="btn-cancel" onclick="closeReplyModal()">Cancelar</button>
+      <button class="btn-draft" onclick="saveDraft()">Salvar Rascunho</button>
+    </div>
+  </div>
+</div>
+
+<!-- Event Modal -->
+<div class="event-modal" id="event-modal">
+  <div class="event-sheet">
+    <div class="event-form-title">Novo Evento</div>
+    <div class="form-field">
+      <label class="form-label">Título</label>
+      <input class="form-input" id="ev-title" type="text" placeholder="Nome do evento" />
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label class="form-label">Data</label>
+        <input class="form-input" id="ev-date" type="date" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Horário</label>
+        <input class="form-input" id="ev-time" type="time" />
+      </div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Local / Link</label>
+      <input class="form-input" id="ev-location" type="text" placeholder="Opcional" />
+    </div>
+    <div class="reply-actions">
+      <button class="btn-cancel" onclick="closeEventModal()">Cancelar</button>
+      <button class="btn-draft" onclick="createEvent()">Criar Evento</button>
+    </div>
+  </div>
+</div>
+
+<div class="notification" id="notification"></div>
+
+<script>
+const GMAIL_MCP = "https://gmail.mcp.claude.com/mcp";
+const GCAL_MCP = "https://gcal.mcp.claude.com/mcp";
+
+function formatDate(d) {
+  return d.toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long' });
+}
+
+function setDateDisplay() {
+  const d = new Date();
+  document.getElementById('date-display').textContent = formatDate(d);
+}
+
+function showNotif(msg) {
+  const el = document.getElementById('notification');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+async function callClaude(userMsg, systemMsg, mcpServers) {
+  const body = {
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1000,
+    system: systemMsg || "",
+    messages: [{ role: "user", content: userMsg }]
+  };
+  if (mcpServers) body.mcp_servers = mcpServers;
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+function extractText(data) {
+  if (!data || !data.content) return "";
+  return data.content.filter(b => b.type === "text").map(b => b.text).join("\n");
+}
+
+function extractMCPResult(data) {
+  if (!data || !data.content) return null;
+  const blocks = data.content.filter(b => b.type === "mcp_tool_result");
+  for (const b of blocks) {
+    const text = b.content?.[0]?.text || "";
+    try { return JSON.parse(text); } catch { return text; }
+  }
+  return extractText(data);
+}
+
+let emailsData = [];
+let eventsData = [];
+let currentReplyEmail = null;
+
+async function loadAll() {
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+  const sections = document.getElementById('sections');
+  sections.innerHTML = `<div class="loading-state"><div class="spinner"></div>Buscando emails e eventos...</div>`;
+
+  try {
+    const [emailRes, calTodayRes, calTomRes, weatherRes] = await Promise.all([
+      callClaude(
+        `Liste meus emails das últimas 24h. Retorne JSON com array "emails", cada item: {id, sender, subject, preview, time, isUrgent}. Marque isUrgent=true se for urgente/importante. Máximo 8 emails. Responda APENAS JSON.`,
+        "Você é assistente. Responda apenas JSON válido, sem markdown.",
+        [{ type:"url", url: GMAIL_MCP, name:"gmail" }]
+      ),
+      callClaude(
+        `Liste meus eventos do Google Calendar para hoje ${todayStr}. Retorne JSON com array "events", cada item: {title, startTime, endTime, location}. Responda APENAS JSON.`,
+        "Você é assistente. Responda apenas JSON válido, sem markdown.",
+        [{ type:"url", url: GCAL_MCP, name:"gcal" }]
+      ),
+      callClaude(
+        `Liste meus eventos do Google Calendar para amanhã ${tomorrowStr}. Retorne JSON com array "events", cada item: {title, startTime, endTime, location}. Responda APENAS JSON.`,
+        "Você é assistente. Responda apenas JSON válido, sem markdown.",
+        [{ type:"url", url: GCAL_MCP, name:"gcal" }]
+      ),
+      fetch(`https://wttr.in/Vitoria+ES+Brazil?format=j1`).then(r=>r.json()).catch(()=>null)
+    ]);
+
+    let emails = [];
+    try {
+      const raw = extractText(emailRes);
+      const clean = raw.replace(/```json|```/g,'').trim();
+      const parsed = JSON.parse(clean);
+      emails = parsed.emails || [];
+    } catch(e) { emails = []; }
+
+    let todayEvents = [];
+    try {
+      const raw = extractText(calTodayRes);
+      const clean = raw.replace(/```json|```/g,'').trim();
+      const parsed = JSON.parse(clean);
+      todayEvents = parsed.events || [];
+    } catch(e) { todayEvents = []; }
+
+    let tomorrowEvents = [];
+    try {
+      const raw = extractText(calTomRes);
+      const clean = raw.replace(/```json|```/g,'').trim();
+      const parsed = JSON.parse(clean);
+      tomorrowEvents = parsed.events || [];
+    } catch(e) { tomorrowEvents = []; }
+
+    emailsData = emails;
+    eventsData = todayEvents;
+
+    const urgent = emails.filter(e => e.isUrgent);
+    const unread = emails.filter(e => !e.isUrgent);
+
+    document.getElementById('status-row').innerHTML = `
+      <span class="status-pill pill-urgent">${urgent.length} urgente${urgent.length !== 1 ? 's' : ''}</span>
+      <span class="status-pill pill-unread">${unread.length} não lidos</span>
+      <span class="status-pill pill-events">${todayEvents.length} evento${todayEvents.length !== 1 ? 's' : ''} hoje</span>
+    `;
+
+    let html = '';
+
+    // Weather
+    if (weatherRes) {
+      const cur = weatherRes.current_condition?.[0];
+      const wCode = cur?.weatherCode || '113';
+      const icons = {'113':'☀️','116':'🌤','119':'⛅','122':'☁️','176':'🌦','179':'🌨','200':'⛈','230':'🌨','260':'🌫','296':'🌧','302':'🌧','308':'🌧','311':'🌧','353':'🌦','356':'🌧','389':'⛈'};
+      const icon = icons[wCode] || '🌡️';
+      const temp = cur?.temp_C || '--';
+      const feels = cur?.FeelsLikeC || '--';
+      const humidity = cur?.humidity || '--';
+      const desc = cur?.weatherDesc?.[0]?.value || '';
+      html += `
+        <div class="section">
+          <div class="section-header"><div class="section-dot dot-weather"></div><div class="section-title">Clima — Vitória, ES</div></div>
+          <div class="weather-card">
+            <div class="weather-icon">${icon}</div>
+            <div>
+              <div class="weather-temp">${temp}°C</div>
+              <div class="weather-desc">${desc}</div>
+            </div>
+            <div class="weather-extras">
+              <div class="weather-row">Sensação <span>${feels}°C</span></div>
+              <div class="weather-row">Umidade <span>${humidity}%</span></div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // Urgent emails
+    if (urgent.length > 0) {
+      html += `<div class="section"><div class="section-header"><div class="section-dot dot-urgent"></div><div class="section-title">Emails Urgentes / Importantes</div></div>`;
+      urgent.forEach((em, i) => {
+        html += `<div class="card">
+          <div class="card-row">
+            <div class="card-left">
+              <div class="card-sender">${em.sender}<span class="urgent-badge">URGENTE</span></div>
+              <div class="card-subject">${em.subject}</div>
+              <div class="card-preview">${em.preview}</div>
+              <div class="action-row">
+                <span class="action-chip" onclick="openReply('${em.id}','${em.sender?.replace(/'/g,'\\'')}')">↩ Responder</span>
+              </div>
+            </div>
+            <div class="card-time">${em.time}</div>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    // Unread emails
+    if (unread.length > 0) {
+      html += `<div class="section"><div class="section-header"><div class="section-dot dot-unread"></div><div class="section-title">Emails Não Lidos</div></div>`;
+      unread.forEach((em, i) => {
+        html += `<div class="card">
+          <div class="card-row">
+            <div class="card-left">
+              <div class="card-sender">${em.sender}</div>
+              <div class="card-subject">${em.subject}</div>
+              <div class="card-preview">${em.preview}</div>
+              <div class="action-row">
+                <span class="action-chip" onclick="openReply('${em.id}','${em.sender?.replace(/'/g,'\\'')}')">↩ Responder</span>
+              </div>
+            </div>
+            <div class="card-time">${em.time}</div>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    if (urgent.length === 0 && unread.length === 0) {
+      html += `<div class="section"><div class="section-header"><div class="section-dot dot-unread"></div><div class="section-title">Emails</div></div><div class="empty-state">Nenhum email novo. Caixa limpa ✓</div></div>`;
+    }
+
+    // Today events
+    html += `<div class="section"><div class="section-header"><div class="section-dot dot-events"></div><div class="section-title">Compromissos de Hoje</div></div>`;
+    if (todayEvents.length > 0) {
+      todayEvents.forEach(ev => {
+        const t = ev.startTime || '';
+        const parts = t.split(':');
+        const h = parts[0] || '--';
+        const m = parts[1] || '00';
+        const hNum = parseInt(h);
+        const ampm = isNaN(hNum) ? '' : (hNum >= 12 ? 'PM' : 'AM');
+        const h12 = isNaN(hNum) ? h : (hNum > 12 ? hNum - 12 : hNum || 12);
+        html += `<div class="event-card">
+          <div class="event-time-block">
+            <div class="event-hour">${h12}:${m}</div>
+            <div class="event-ampm">${ampm}</div>
+          </div>
+          <div class="event-divider"></div>
+          <div class="event-info">
+            <div class="event-title">${ev.title}</div>
+            <div class="event-detail">${ev.location || 'Sem local definido'} ${ev.endTime ? '· até ' + ev.endTime : ''}</div>
+          </div>
+        </div>`;
+      });
+    } else {
+      html += `<div class="empty-state">Nenhum evento agendado para hoje.</div>`;
+    }
+    html += `<div class="action-row" style="margin-top:4px"><span class="action-chip" onclick="openEventModal()">+ Criar evento</span></div></div>`;
+
+    // Tomorrow events
+    html += `<div class="section"><div class="section-header"><div class="section-dot dot-tomorrow"></div><div class="section-title">Compromissos de Amanhã</div></div>`;
+    if (tomorrowEvents.length > 0) {
+      tomorrowEvents.forEach(ev => {
+        const t = ev.startTime || '';
+        const parts = t.split(':');
+        const h = parts[0] || '--';
+        const m = parts[1] || '00';
+        const hNum = parseInt(h);
+        const ampm = isNaN(hNum) ? '' : (hNum >= 12 ? 'PM' : 'AM');
+        const h12 = isNaN(hNum) ? h : (hNum > 12 ? hNum - 12 : hNum || 12);
+        html += `<div class="event-card">
+          <div class="event-time-block">
+            <div class="event-hour" style="color:var(--accent)">${h12}:${m}</div>
+            <div class="event-ampm">${ampm}</div>
+          </div>
+          <div class="event-divider"></div>
+          <div class="event-info">
+            <div class="event-title">${ev.title}</div>
+            <div class="event-detail">${ev.location || 'Sem local definido'} ${ev.endTime ? '· até ' + ev.endTime : ''}</div>
+          </div>
+        </div>`;
+      });
+    } else {
+      html += `<div class="empty-state">Nenhum evento agendado para amanhã.</div>`;
+    }
+    html += `</div>`;
+
+    sections.innerHTML = html;
+
+  } catch(err) {
+    sections.innerHTML = `<div class="empty-state">Erro ao carregar dados. Verifique sua conexão com Gmail e Google Calendar.</div>`;
+    console.error(err);
+  }
+}
+
+function openReply(emailId, sender) {
+  currentReplyEmail = { id: emailId, sender };
+  document.getElementById('reply-to-name').textContent = sender;
+  document.getElementById('reply-textarea').value = '';
+  document.getElementById('generating-text').style.display = 'none';
+  document.getElementById('reply-modal').classList.add('open');
+}
+
+function closeReplyModal() {
+  document.getElementById('reply-modal').classList.remove('open');
+  currentReplyEmail = null;
+}
+
+async function saveDraft() {
+  const body = document.getElementById('reply-textarea').value.trim();
+  if (!body) return showNotif('Escreva uma resposta antes de salvar.');
+
+  const genEl = document.getElementById('generating-text');
+  genEl.style.display = 'block';
+  genEl.textContent = 'Salvando rascunho no Gmail...';
+
+  try {
+    const email = emailsData.find(e => e.id === currentReplyEmail?.id) || {};
+    await callClaude(
+      `Crie um rascunho de email respondendo para "${currentReplyEmail?.sender}" com o seguinte conteúdo: "${body}". Email original: assunto "${email.subject || ''}"`,
+      "Você é um assistente de email. Use a ferramenta do Gmail para criar o rascunho.",
+      [{ type:"url", url: GMAIL_MCP, name:"gmail" }]
+    );
+    showNotif('✓ Rascunho salvo no Gmail!');
+    closeReplyModal();
+  } catch(e) {
+    showNotif('Erro ao salvar rascunho.');
+    genEl.style.display = 'none';
+  }
+}
+
+function openEventModal() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('ev-date').value = today;
+  document.getElementById('ev-title').value = '';
+  document.getElementById('ev-time').value = '';
+  document.getElementById('ev-location').value = '';
+  document.getElementById('event-modal').classList.add('open');
+}
+
+function closeEventModal() {
+  document.getElementById('event-modal').classList.remove('open');
+}
+
+async function createEvent() {
+  const title = document.getElementById('ev-title').value.trim();
+  const date = document.getElementById('ev-date').value;
+  const time = document.getElementById('ev-time').value;
+  const location = document.getElementById('ev-location').value.trim();
+
+  if (!title || !date || !time) return showNotif('Preencha título, data e horário.');
+
+  try {
+    await callClaude(
+      `Crie um evento no Google Calendar: título "${title}", data ${date}, horário ${time}${location ? ', local: ' + location : ''}.`,
+      "Você é assistente de calendário. Use a ferramenta para criar o evento.",
+      [{ type:"url", url: GCAL_MCP, name:"gcal" }]
+    );
+    showNotif(`✓ Evento "${title}" criado!`);
+    closeEventModal();
+    loadAll();
+  } catch(e) {
+    showNotif('Erro ao criar evento.');
+  }
+}
+
+async function handleUserInput(text) {
+  if (!text.trim()) return;
+  const lower = text.toLowerCase();
+
+  if (lower.includes('evento') || lower.includes('agendar') || lower.includes('reunião') || lower.includes('marcar')) {
+    await callClaude(
+      `O usuário pediu: "${text}". Crie o evento no Google Calendar conforme o pedido.`,
+      "Você é assistente de calendário. Use a ferramenta para criar o evento.",
+      [{ type:"url", url: GCAL_MCP, name:"gcal" }]
+    );
+    showNotif('✓ Evento criado a partir do seu pedido!');
+    loadAll();
+  } else if (lower.includes('responder') || lower.includes('email') || lower.includes('reply')) {
+    const parts = emailsData.slice(0,3);
+    if (parts.length > 0) openReply(parts[0].id, parts[0].sender);
+    else showNotif('Nenhum email recente encontrado.');
+  } else if (lower.includes('atualizar') || lower.includes('recarregar') || lower.includes('bom dia')) {
+    loadAll();
+  } else {
+    const res = await callClaude(
+      `Contexto: assistente pessoal do usuário. Emails recentes: ${JSON.stringify(emailsData.slice(0,3))}. Eventos hoje: ${JSON.stringify(eventsData)}. Pergunta: "${text}"`,
+      "Você é um assistente pessoal prestativo. Responda de forma concisa em português.",
+      [{ type:"url", url: GMAIL_MCP, name:"gmail" }, { type:"url", url: GCAL_MCP, name:"gcal" }]
+    );
+    showNotif(extractText(res).slice(0, 80) + '...');
+  }
+}
+
+// Send button
+document.getElementById('send-btn').addEventListener('click', () => {
+  const inp = document.getElementById('user-input');
+  handleUserInput(inp.value);
+  inp.value = '';
+});
+
+document.getElementById('user-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    handleUserInput(e.target.value);
+    e.target.value = '';
+  }
+});
+
+// Mic (Web Speech API)
+let recognition = null;
+const micBtn = document.getElementById('mic-btn');
+let listening = false;
+
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'pt-BR';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onresult = e => {
+    const transcript = e.results[0][0].transcript;
+    document.getElementById('user-input').value = transcript;
+    handleUserInput(transcript);
+    listening = false;
+    micBtn.style.background = 'var(--accent)';
+  };
+
+  recognition.onerror = () => {
+    listening = false;
+    micBtn.style.background = 'var(--accent)';
+  };
+
+  recognition.onend = () => {
+    listening = false;
+    micBtn.style.background = 'var(--accent)';
+  };
+
+  micBtn.addEventListener('click', () => {
+    if (!listening) {
+      recognition.start();
+      listening = true;
+      micBtn.style.background = 'var(--urgent)';
+    } else {
+      recognition.stop();
+      listening = false;
+      micBtn.style.background = 'var(--accent)';
+    }
+  });
+} else {
+  micBtn.title = 'Microfone não suportado neste browser';
+}
+
+setDateDisplay();
+loadAll();
+</script>
+</body>
+</html>
