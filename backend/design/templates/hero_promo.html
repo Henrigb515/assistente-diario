@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>{{ title }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: {{ primary_color | default('#0a7c3a') }};
+    --accent: {{ accent_color | default('#e8d12f') }};
+    --ink: {{ ink_color | default('#ffffff') }};
+    --shadow: rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1080px;
+    height: 1350px;
+    font-family: 'Inter', sans-serif;
+    background: var(--primary);
+    color: var(--ink);
+    overflow: hidden;
+  }
+  .slide {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 64px 72px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background:
+      radial-gradient(circle at 85% 15%, rgba(255,255,255,.12), transparent 55%),
+      linear-gradient(135deg, var(--primary) 0%, rgba(0,0,0,.35) 100%);
+  }
+  .eyebrow {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    font-size: 28px;
+    color: var(--accent);
+  }
+  .title {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: {{ title_size | default('128px') }};
+    line-height: 1.02;
+    letter-spacing: -2px;
+    text-transform: uppercase;
+    margin-top: 24px;
+    text-shadow: 0 6px 18px var(--shadow);
+  }
+  .subtitle {
+    font-size: 38px;
+    font-weight: 600;
+    line-height: 1.25;
+    margin-top: 32px;
+    max-width: 900px;
+  }
+  .body {
+    font-size: 30px;
+    font-weight: 400;
+    line-height: 1.4;
+    margin-top: 28px;
+    max-width: 880px;
+    opacity: .95;
+  }
+  .footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding-top: 40px;
+    border-top: 2px solid rgba(255,255,255,.22);
+  }
+  .brand-block {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .brand-block img {
+    height: 64px;
+    width: auto;
+    object-fit: contain;
+  }
+  .brand-label {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: .85;
+  }
+  .page-indicator {
+    font-family: 'Oswald', sans-serif;
+    font-size: 28px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+  .cta-chip {
+    display: inline-block;
+    background: var(--accent);
+    color: #0d0d0d;
+    padding: 18px 32px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 28px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 36px;
+  }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div>
+    {% if eyebrow %}<div class="eyebrow">{{ eyebrow }}</div>{% endif %}
+    <h1 class="title">{{ title }}</h1>
+    {% if subtitle %}<p class="subtitle">{{ subtitle }}</p>{% endif %}
+    {% if body %}<p class="body">{{ body }}</p>{% endif %}
+    {% if cta %}<span class="cta-chip">{{ cta }}</span>{% endif %}
+  </div>
+
+  <div class="footer">
+    <div class="brand-block">
+      {% if distributor_logo %}<img src="{{ distributor_logo }}" alt="Nova Norte" />{% endif %}
+      {% if brand_logo %}<img src="{{ brand_logo }}" alt="Marca" />{% endif %}
+    </div>
+    {% if page_indicator %}<div class="page-indicator">{{ page_indicator }}</div>{% endif %}
+  </div>
+</div>
+</body>
+</html>

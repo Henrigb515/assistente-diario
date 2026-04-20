@@ -1,0 +1,10 @@
+.env
+credentials/
+backend/output/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
+.pytest_cache/
+node_modules/
