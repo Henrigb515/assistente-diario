@@ -1,20 +1,21 @@
 from __future__ import annotations
 
+import base64
 import logging
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from playwright.sync_api import sync_playwright
 from PIL import Image
-from PIL import JpegImagePlugin  # noqa: F401  forca registro do plugin JPEG (Python 3.14)
-from PIL import PngImagePlugin  # noqa: F401
+from PIL import JpegImagePlugin  # noqa: F401
+from PIL import PngImagePlugin   # noqa: F401
 
 log = logging.getLogger(__name__)
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
-ASSETS_DIR = Path(__file__).parent / "assets"
+ASSETS_DIR    = Path(__file__).parent / "assets"
 
-SLIDE_WIDTH = 1080
+SLIDE_WIDTH  = 1080
 SLIDE_HEIGHT = 1350
 
 _env = Environment(
@@ -23,21 +24,28 @@ _env = Environment(
 )
 
 
-def _asset_uri(path: Path) -> str:
-    return path.resolve().as_uri()
+def _to_data_uri(path: Path) -> str:
+    """Converte imagem local para data URI base64 — unico jeito confiavel com set_content()."""
+    ext  = path.suffix.lower()
+    mime = "image/png" if ext == ".png" else "image/jpeg"
+    data = base64.b64encode(path.read_bytes()).decode()
+    return f"data:{mime};base64,{data}"
 
 
 def _resolve_logos(ctx: dict) -> dict:
     ctx = dict(ctx)
     for key in ("distributor_logo", "brand_logo"):
         value = ctx.get(key)
-        if value and not value.startswith(("http://", "https://", "file://")):
-            candidate = (ASSETS_DIR / "logos" / value).resolve()
-            if candidate.exists():
-                ctx[key] = _asset_uri(candidate)
-            else:
-                log.warning("Logo nao encontrada: %s", candidate)
-                ctx[key] = ""
+        if not value:
+            continue
+        if value.startswith("data:"):
+            continue
+        candidate = (ASSETS_DIR / "logos" / value).resolve()
+        if candidate.exists():
+            ctx[key] = _to_data_uri(candidate)
+        else:
+            log.warning("Logo nao encontrada: %s", candidate)
+            ctx[key] = ""
     return ctx
 
 
@@ -76,5 +84,5 @@ def build_pdf(png_paths: list[Path], out_pdf: Path) -> Path | None:
         log.info("PDF gerado: %s", out_pdf)
         return out_pdf
     except Exception as exc:
-        log.warning("Falha ao gerar PDF (%s); PNGs estao disponiveis em %s", exc, png_paths[0].parent)
+        log.warning("Falha ao gerar PDF (%s); PNGs disponíveis em %s", exc, png_paths[0].parent)
         return None
