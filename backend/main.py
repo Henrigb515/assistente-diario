@@ -43,7 +43,11 @@ def cmd_demo_slide(args: argparse.Namespace) -> None:
         out_dir / "slide_01.png",
     )
     pdf = build_pdf([png], out_dir / "carrossel.pdf")
-    print(f"PNG: {png}\nPDF: {pdf}")
+    print(f"PNG: {png}")
+    if pdf:
+        print(f"PDF: {pdf}")
+    else:
+        print("PDF: falhou (PNG gerado normalmente, segue para validacao visual)")
 
 
 def cmd_run(_args: argparse.Namespace) -> None:
